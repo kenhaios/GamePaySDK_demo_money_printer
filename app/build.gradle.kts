@@ -49,6 +49,12 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    
+    // Game-specific dependencies
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.lottie.compose)
+    implementation(libs.androidx.preference.ktx)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
