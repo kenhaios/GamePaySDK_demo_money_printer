@@ -3,16 +3,26 @@ package com.terminal3.demo.money_printer.game.engine
 import com.terminal3.demo.money_printer.data.models.AutomationTool
 import com.terminal3.demo.money_printer.data.models.AutomationTools
 import com.terminal3.demo.money_printer.data.models.GameState
+import com.terminal3.demo.money_printer.game.premium.PremiumItemManager
 
 class GameEngine {
     private var gameState = GameState()
     private val automationTools = AutomationTools.ALL_TOOLS.map { it.copy() }.toMutableList()
+    private val premiumItemManager = PremiumItemManager()
     
     fun getGameState(): GameState = gameState
     
     fun updateGameState(newState: GameState) {
         gameState = newState
         syncAutomationTools()
+    }
+    
+    fun loadPremiumData(ownedItems: Set<String>, activeBoosts: List<com.terminal3.demo.money_printer.data.models.ActiveBoost>) {
+        premiumItemManager.loadFromData(ownedItems, activeBoosts)
+    }
+    
+    fun savePremiumData(): Pair<Set<String>, List<com.terminal3.demo.money_printer.data.models.ActiveBoost>> {
+        return premiumItemManager.getSaveData()
     }
     
     private fun syncAutomationTools() {
@@ -22,7 +32,9 @@ class GameEngine {
     }
     
     fun calculateMoneyPerSecond(): Double {
-        return automationTools.sumOf { it.getCurrentProduction() }
+        val baseProduction = automationTools.sumOf { it.getCurrentProduction() }
+        val multiplier = premiumItemManager.getAutomationMultiplier()
+        return baseProduction * multiplier
     }
     
     fun processClick(): Long {
@@ -39,7 +51,9 @@ class GameEngine {
     }
     
     private fun calculateClickMultiplier(): Double {
-        return 1.0 + (automationTools.sumOf { it.owned } * 0.1)
+        val baseMultiplier = 1.0 + (automationTools.sumOf { it.owned } * 0.1)
+        val premiumMultiplier = premiumItemManager.getClickMultiplier()
+        return baseMultiplier * premiumMultiplier
     }
     
     fun calculateOfflineEarnings(offlineTime: Long): Long {
@@ -94,5 +108,35 @@ class GameEngine {
             return true
         }
         return false
+    }
+    
+    fun purchasePremiumItem(itemId: String, coinCost: Int): Boolean {
+        if (gameState.coins >= coinCost && !premiumItemManager.isItemOwned(itemId)) {
+            if (premiumItemManager.purchaseItem(itemId)) {
+                gameState = gameState.copy(coins = gameState.coins - coinCost)
+                return true
+            }
+        }
+        return false
+    }
+    
+    fun exchangeCoinsForCash(coins: Int, cashAmount: Long): Boolean {
+        if (gameState.coins >= coins) {
+            gameState = gameState.copy(
+                coins = gameState.coins - coins,
+                cash = gameState.cash + cashAmount,
+                totalEarned = gameState.totalEarned + cashAmount
+            )
+            return true
+        }
+        return false
+    }
+    
+    fun getPremiumItemManager(): PremiumItemManager = premiumItemManager
+    
+    fun getActiveBoostInfo(): List<Pair<String, Long>> = premiumItemManager.getActiveBoostInfo()
+    
+    fun updateBoosts() {
+        premiumItemManager.updateActiveBoosts()
     }
 }

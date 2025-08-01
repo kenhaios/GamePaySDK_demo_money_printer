@@ -32,6 +32,10 @@ class MainGameViewModel(application: Application) : AndroidViewModel(application
     }
     
     private fun initializeGame() {
+        // Load premium data first
+        val (ownedItems, activeBoosts) = gameRepository.loadPremiumData()
+        gameEngine.loadPremiumData(ownedItems, activeBoosts)
+        
         viewModelScope.launch {
             gameRepository.gameState.collect { savedState ->
                 gameEngine.updateGameState(savedState)
@@ -113,6 +117,8 @@ class MainGameViewModel(application: Application) : AndroidViewModel(application
     override fun onCleared() {
         super.onCleared()
         gameRepository.saveGameState(gameEngine.getGameState())
+        val (ownedItems, activeBoosts) = gameEngine.savePremiumData()
+        gameRepository.savePremiumData(ownedItems, activeBoosts)
     }
 }
 

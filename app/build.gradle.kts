@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.preference.ktx)
+    implementation(libs.androidx.compose.animation)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
